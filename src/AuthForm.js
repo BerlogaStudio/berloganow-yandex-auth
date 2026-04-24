@@ -1,9 +1,28 @@
-import {Button, Col, Form, Image, Row} from 'react-bootstrap';
+import {Alert, Button, Form} from 'react-bootstrap';
 import React from 'react';
-import {CaptchaRequired, CaptchaWrong, YandexMusicApi} from './Api';
+import {YandexMusicApi} from './Api';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://now.berloga.dev/yandex';
 const BOT_USERNAME = process.env.REACT_APP_BOT_USERNAME || 'berloganowbot';
+
+// Official Yandex.Music client — same client_id the mobile/desktop apps use.
+// Music API scopes aren't available to third-party OAuth clients, so we're
+// stuck with this public client_id. The redirect flow works with 2FA; the
+// password grant does not.
+const YANDEX_CLIENT_ID = '23cabbbdc6cd418abb4b39c32c41195d';
+const AUTHORIZE_URL = `https://oauth.yandex.ru/authorize?response_type=token&client_id=${YANDEX_CLIENT_ID}&force_confirm=no`;
+
+
+function extractToken(pasted) {
+  const s = (pasted || '').trim();
+  if (!s) return null;
+  // If the user pasted the whole URL with #access_token=... or ?access_token=...
+  const m = s.match(/access_token=([A-Za-z0-9_\-.]+)/);
+  if (m) return m[1];
+  // Otherwise assume they pasted just the bare token (must look reasonable)
+  if (/^[A-Za-z0-9_\-.]{20,}$/.test(s)) return s;
+  return null;
+}
 
 
 class AuthForm extends React.Component {
@@ -13,53 +32,37 @@ class AuthForm extends React.Component {
     super(props);
     const params = new URLSearchParams(window.location.search);
     this.state = {
-      username: '',
-      password: '',
+      pasted: '',
       error: null,
+      submitting: false,
       authenticated: false,
       displayName: params.get('display_name'),
       hash: params.get('hash'),
     };
   }
 
-  handleChange = ({target: {name, value}}) => {
-    this.setState({...this.state, [name]: value, error: null});
+  handleChange = ({target: {value}}) => {
+    this.setState({pasted: value, error: null});
   };
 
-  handleSubmit = event => {
+  handleSubmit = async (event) => {
     event.preventDefault();
-
-    this.setState({
-      ...this.state,
-      x_captcha_url: undefined,
-      x_captcha_key: undefined,
-    });
-
-    const {username, password, x_captcha_answer, x_captcha_key, hash} = this.state;
-    this.api.generate_token_by_username_and_password(username, password, x_captcha_answer, x_captcha_key).then(token => {
-      this.api.send_token_to_backend(BACKEND_URL, hash, token).then(() => {
-        this.setState({...this.state, authenticated: true});
-      }).catch(error => {
-        this.setState({...this.state, error});
-      });
-    }).catch(error => {
-      if (error instanceof CaptchaRequired || error instanceof CaptchaWrong) {
-        const {x_captcha_url, x_captcha_key, error_description} = error.body;
-        this.setState({
-          ...this.state,
-          x_captcha_url,
-          x_captcha_key,
-          error: error_description,
-        });
-      } else {
-        this.setState({...this.state, error});
-      }
-    });
+    const token = extractToken(this.state.pasted);
+    if (!token) {
+      this.setState({error: "We couldn't find an access_token in that input. Paste the full URL from Yandex's page, or just the token."});
+      return;
+    }
+    this.setState({submitting: true, error: null});
+    try {
+      await this.api.send_token_to_backend(BACKEND_URL, this.state.hash, token);
+      this.setState({authenticated: true});
+    } catch (err) {
+      this.setState({error: err.message || String(err), submitting: false});
+    }
   };
 
   render() {
-    const {Link} = this.props;
-    const {x_captcha_url, error, authenticated, displayName, hash} = this.state;
+    const {error, authenticated, displayName, hash, pasted, submitting} = this.state;
 
     if (!displayName || !hash) {
       return (
@@ -88,57 +91,35 @@ class AuthForm extends React.Component {
     }
 
     return (
-      <Form>
+      <Form onSubmit={this.handleSubmit}>
         <p className="text-muted text-center">
           <small>Linking Yandex.Music to <b>{displayName}</b></small>
         </p>
-        <Form.Group controlId="formBasicEmail">
-          <Form.Control name="username" onChange={this.handleChange}
-                        type="email" placeholder="Login, email or phone"/>
+
+        <Alert variant="light" style={{border: '1px solid #e6e6ea'}}>
+          <p className="mb-2"><b>Step 1.</b> Sign in to Yandex in a new tab — this is Yandex's own login page, it handles 2FA and everything:</p>
+          <a href={AUTHORIZE_URL} target="_blank" rel="noreferrer">
+            <Button variant="primary" block>Sign in with Yandex →</Button>
+          </a>
+        </Alert>
+
+        <Alert variant="light" style={{border: '1px solid #e6e6ea'}}>
+          <p className="mb-2"><b>Step 2.</b> After you sign in, Yandex will redirect you to a page whose URL looks like:</p>
+          <p className="mb-2"><code style={{wordBreak: 'break-all', fontSize: '12px'}}>https://oauth.yandex.ru/verification_code#access_token=<b>y0_AgAAAAA...</b>&token_type=bearer&expires_in=...</code></p>
+          <p className="mb-0"><b>Copy the entire URL</b> (⌘L, ⌘A, ⌘C on macOS · Ctrl+L, Ctrl+A, Ctrl+C on Windows/Linux) and paste it below. We'll extract the token automatically.</p>
+        </Alert>
+
+        <Form.Group controlId="formPasted">
+          <Form.Label><b>Step 3.</b> Paste the URL (or just the token)</Form.Label>
+          <Form.Control as="textarea" rows={3} value={pasted}
+                        onChange={this.handleChange}
+                        placeholder="https://oauth.yandex.ru/verification_code#access_token=..."/>
         </Form.Group>
 
-        <Form.Group controlId="formBasicPassword">
-          <Form.Control name="password" onChange={this.handleChange}
-                        type="password" placeholder="Password"/>
-          <Link url="https://passport.yandex.ru/auth/restore/" text="Forgot?"/>
-        </Form.Group>
+        {error && <p className="text-danger"><small>{error}</small></p>}
 
-        {x_captcha_url &&
-          <Form.Group controlId="formBasicCaptcha">
-            <Row className="mb-2">
-              <Col><Image fluid src={x_captcha_url}/></Col>
-              <Col className="align-self-center">
-                <Button className="btn-block" type="submit" onClick={this.handleSubmit}>
-                  Refresh
-                </Button>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Form.Control name="x_captcha_answer" onChange={this.handleChange}
-                              type="text" placeholder="Enter the captcha code"/>
-              </Col>
-            </Row>
-          </Form.Group>
-        }
-
-        {error && <>
-          <p className="mt-1 text-danger">{`${error}`}</p>
-          <p className="mt-1 text-info">
-            <small>
-              If your password is correct but sign-in fails (likely 2FA), use one of these alternative apps to
-              obtain your token, then paste it manually in the bot:
-              <ul className="mt-1">
-                <li><a href="https://github.com/MarshalX/yandex-music-token/releases">Android app</a></li>
-                <li><a href="https://chromewebstore.google.com/detail/yandex-music-token/lcbjeookjibfhjjopieifgjnhlegmkib">Chrome extension</a></li>
-                <li><a href="https://addons.mozilla.org/en-US/firefox/addon/yandex-music-token/">Firefox extension</a></li>
-              </ul>
-            </small>
-          </p>
-        </>}
-
-        <Button variant="primary" type="submit" block onClick={this.handleSubmit} className="mb-1">
-          Sign in
+        <Button variant="success" type="submit" block disabled={submitting || !pasted}>
+          {submitting ? 'Linking…' : 'Link Yandex.Music'}
         </Button>
       </Form>
     );

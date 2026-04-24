@@ -25,8 +25,9 @@ class App extends Component {
             </Row>
             <Row className="d-flex justify-content-center px-5 text-center mb-3">
               <p className="text-muted">
-                <small>Your password is sent straight to Yandex OAuth from your browser.
-                Our server only ever sees the resulting access token.</small>
+                <small>You sign in on Yandex's own login page (2FA and everything) and paste
+                the resulting access token back here. Your password never touches our server —
+                it never even touches this page.</small>
               </p>
             </Row>
             <AuthForm Link={Link}/>
@@ -39,12 +40,12 @@ class App extends Component {
             <h2 className="text-center mb-3">Why you can trust this page</h2>
             <Row>
               <CardDeck className="mx-0">
-                <TrustCard icon={['fab', 'yandex']} title="Direct to Yandex"
-                           text="Your credentials are sent straight to oauth.yandex.com — never to the bot's backend."/>
+                <TrustCard icon={['fab', 'yandex']} title="Yandex-hosted login"
+                           text="You sign in on oauth.yandex.ru — Yandex's own page, 2FA and all. This page never asks for your password."/>
                 <TrustCard icon={['fab', 'expeditedssl']} title="HTTPS only"
                            text="All traffic is encrypted end-to-end."/>
-                <TrustCard icon="key" title="No passwords stored"
-                           text="The bot's server only receives the access token you just generated."/>
+                <TrustCard icon="key" title="Token only"
+                           text="Our server only ever receives the OAuth access token — nothing more."/>
                 <TrustCard icon="code" title="Open source"
                            text="Inspect the full source on GitHub before you type anything."/>
               </CardDeck>
