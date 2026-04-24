@@ -1,0 +1,17 @@
+services:
+  web:
+    image: ghcr.io/berlogastudio/berloganow-yandex-auth:latest
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      # Baked into the JS bundle at build time — these are only used if the
+      # image is built locally. For the CI image, edit build-args in the
+      # GitHub Actions workflow.
+      REACT_APP_BOT_USERNAME: ${REACT_APP_BOT_USERNAME:-berloganowbot}
+      REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL:-https://now.berloga.dev/yandex}
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

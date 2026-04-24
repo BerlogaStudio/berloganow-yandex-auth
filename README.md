@@ -1,26 +1,43 @@
-## Авторизация в Яндекс.Музыка
+# berloganow-yandex-auth
 
-Проекты для авторизации в свой аккаунт в [Telegram-боте Яндекc.Музыки](https://t.me/music_yandex_bot). 
+One-page React SPA that links a Yandex.Music account to the [`@berloganowbot`](https://t.me/berloganowbot) Telegram bot.
 
-Позволяют скопировать токен для других нужд.
+Forked from [MarshalX/yandex-music-token](https://github.com/MarshalX/yandex-music-token). The integration pattern (backend URL with `hash` + `display_name` params) is inspired by [anna-oake/nowplaybot-yandex-auth](https://github.com/anna-oake/nowplaybot-yandex-auth).
 
-### Варианты входа
+## How it works
 
-Существует три варианта входа:
-- **[web-app](web-app)** - использует старую версию OAuth. Работает не для всех аккаунтов.
-  - Сайт: https://music-yandex-bot.ru
-- **[android-app](android-app)** - использует современную SDK работающую на intents + webview. Работает для всех аккаунтов.
-  - APK файл: https://github.com/MarshalX/yandex-music-token/releases
-- **[browser-extension](browser-extension)** - использует другой вариант OAuth авторизации. Перехватывает токен из перенаправления.
-  - Chrome: https://chrome.google.com/webstore/detail/yandex-music-token/lcbjeookjibfhjjopieifgjnhlegmkib
-  - Firefox: https://addons.mozilla.org/en-US/firefox/addon/yandex-music-token/
+1. The bot sends the user a link like `https://yandex.now.berloga.dev/?display_name=@user&hash=<state>`.
+2. The page reads `display_name` and `hash` from the query string and asks the user to sign in with their Yandex credentials.
+3. `POST` goes **straight from the browser to `https://oauth.yandex.com/token`** — the Yandex.Music OAuth endpoint, using the public client_id/secret of the official Yandex.Music client. The bot's server never sees the password.
+4. On success, the resulting `access_token` is `POST`ed (with the `hash`) to the bot's backend at `https://now.berloga.dev/yandex`, which looks up the Telegram user by `hash` and stores the token.
+5. The page shows a "Return to Telegram" button.
 
-### Полезные ссылки
+## Local dev
 
-- [Обсуждение получения ЯМ токена](https://github.com/MarshalX/yandex-music-api/discussions/513)
-- [Telegram чат про API Yandex.Music](https://t.me/yandex_music_api)
-- [Python библиотека с документацией к API Yandex.Music](https://github.com/MarshalX/yandex-music-api)
+```bash
+yarn install
+yarn start
+```
 
-### Лицензия
+Runs on `http://localhost:3000`. Override the backend URL and bot username via `.env.local`:
 
-MIT
+```
+REACT_APP_BACKEND_URL=http://localhost:8080/yandex
+REACT_APP_BOT_USERNAME=berloganowbot
+```
+
+## Deployment (Dokploy)
+
+The included `Dockerfile` multi-stage builds the React app and serves it via nginx:80. Push to `master` → GHA builds `ghcr.io/berlogastudio/berloganow-yandex-auth:latest` → pings Dokploy webhook.
+
+Dokploy service setup:
+
+- **App type**: Docker Compose
+- **Repo**: `BerlogaStudio/berloganow-yandex-auth`
+- **Domain**: `yandex.now.berloga.dev` → container port 80 → HTTPS via Let's Encrypt
+- **Env vars** (only if you want to override the defaults baked at build time): `REACT_APP_BOT_USERNAME`, `REACT_APP_BACKEND_URL`
+
+## Credits
+
+- [MarshalX/yandex-music-token](https://github.com/MarshalX/yandex-music-token) — original React page and OAuth client credentials.
+- [anna-oake/nowplaybot-yandex-auth](https://github.com/anna-oake/nowplaybot-yandex-auth) — backend-POST integration pattern.
