@@ -4,6 +4,8 @@ ARG REACT_APP_BOT_USERNAME=berloganowbot
 ARG REACT_APP_BACKEND_URL=https://now.berloga.dev/yandex
 ENV REACT_APP_BOT_USERNAME=$REACT_APP_BOT_USERNAME
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+# react-scripts 4.0.3 uses legacy OpenSSL hashes that Node 17+ rejects by default.
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /app
 COPY package.json yarn.lock ./
