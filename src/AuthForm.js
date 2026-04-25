@@ -1,4 +1,3 @@
-import {Alert, Button, Form} from 'react-bootstrap';
 import React from 'react';
 import {YandexMusicApi} from './Api';
 
@@ -49,7 +48,7 @@ class AuthForm extends React.Component {
     event.preventDefault();
     const token = extractToken(this.state.pasted);
     if (!token) {
-      this.setState({error: "We couldn't find an access_token in that input. Paste the full URL from Yandex's page, or just the token."});
+      this.setState({error: "We couldn't find an access_token in that input. Paste the full URL from the redirect page, or just the token."});
       return;
     }
     this.setState({submitting: true, error: null});
@@ -66,62 +65,55 @@ class AuthForm extends React.Component {
 
     if (!displayName || !hash) {
       return (
-        <div className="text-center">
+        <div className="card center">
           <p><b>Invalid link.</b></p>
-          <p>Open @{BOT_USERNAME} in Telegram, send <code>/start</code> and press "Authorize Yandex.Music" again.</p>
-          <a href={`https://t.me/${BOT_USERNAME}`}>
-            <Button variant="primary" block>Open @{BOT_USERNAME}</Button>
-          </a>
+          <p className="muted">Open @{BOT_USERNAME} in Telegram, send <code>/start</code> and press "Authorize Yandex.Music" again.</p>
+          <a className="cta" href={`https://t.me/${BOT_USERNAME}`}>Open @{BOT_USERNAME}</a>
         </div>
       );
     }
 
     if (authenticated) {
       return (
-        <div className="text-center">
-          <p className="text-success"><b>✅ Linked!</b></p>
-          <a href={`tg://resolve?domain=${BOT_USERNAME}`}>
-            <Button variant="primary" block>Return to Telegram</Button>
-          </a>
-          <small className="text-muted">
+        <div className="card center">
+          <div className="badge">✅</div>
+          <p className="ok"><b>Linked!</b></p>
+          <a className="cta" href={`tg://resolve?domain=${BOT_USERNAME}`}>Return to Telegram</a>
+          <p className="muted small">
             If the button doesn't work — <a href={`https://t.me/${BOT_USERNAME}`}>open @{BOT_USERNAME}</a>.
-          </small>
+          </p>
         </div>
       );
     }
 
     return (
-      <Form onSubmit={this.handleSubmit}>
-        <p className="text-muted text-center">
-          <small>Linking Yandex.Music to <b>{displayName}</b></small>
-        </p>
+      <form onSubmit={this.handleSubmit}>
+        <p className="muted center small">Linking Yandex.Music to <b>{displayName}</b></p>
 
-        <Alert variant="light" style={{border: '1px solid #e6e6ea'}}>
-          <p className="mb-2"><b>Step 1.</b> Sign in to Yandex in a new tab — this is Yandex's own login page, it handles 2FA and everything:</p>
-          <a href={AUTHORIZE_URL} target="_blank" rel="noreferrer">
-            <Button variant="primary" block>Sign in with Yandex →</Button>
-          </a>
-        </Alert>
-
-        <Alert variant="light" style={{border: '1px solid #e6e6ea'}}>
-          <p className="mb-2"><b>Step 2.</b> After you sign in, Yandex will redirect you to a page whose URL looks like:</p>
-          <p className="mb-2"><code style={{wordBreak: 'break-all', fontSize: '12px'}}>https://oauth.yandex.ru/verification_code#access_token=<b>y0_AgAAAAA...</b>&token_type=bearer&expires_in=...</code></p>
-          <p className="mb-0"><b>Copy the entire URL</b> (⌘L, ⌘A, ⌘C on macOS · Ctrl+L, Ctrl+A, Ctrl+C on Windows/Linux) and paste it below. We'll extract the token automatically.</p>
-        </Alert>
-
-        <Form.Group controlId="formPasted">
-          <Form.Label><b>Step 3.</b> Paste the URL (or just the token)</Form.Label>
-          <Form.Control as="textarea" rows={3} value={pasted}
-                        onChange={this.handleChange}
-                        placeholder="https://oauth.yandex.ru/verification_code#access_token=..."/>
-        </Form.Group>
-
-        {error && <p className="text-danger"><small>{error}</small></p>}
-
-        <Button variant="success" type="submit" block disabled={submitting || !pasted}>
-          {submitting ? 'Linking…' : 'Link Yandex.Music'}
-        </Button>
-      </Form>
+        <ol className="steps">
+          <li>
+            <h3>Sign in on Yandex</h3>
+            <p>Open the official Yandex login page in a new tab. It handles 2FA, password managers — everything Yandex normally does.</p>
+            <p><a className="cta" href={AUTHORIZE_URL} target="_blank" rel="noreferrer">Sign in with Yandex →</a></p>
+          </li>
+          <li>
+            <h3>Copy the redirect URL</h3>
+            <p>After you press <b>Allow</b>, Yandex redirects you to a page on <code>music.yandex.ru</code>. The address bar will look like:</p>
+            <p><code className="url">https://music.yandex.ru/#access_token=<b>y0_AgAAAAA...</b>&token_type=bearer&expires_in=...&cid=...</code></p>
+            <p className="note">Yes, the page itself is just music.yandex.ru — that's normal. The token lives in the URL fragment after <code>access_token=</code>.</p>
+            <p><b>Copy the entire URL</b> — ⌘L → ⌘A → ⌘C on macOS, Ctrl+L → Ctrl+A → Ctrl+C on Windows/Linux. We'll extract the token automatically.</p>
+          </li>
+          <li>
+            <h3>Paste it below</h3>
+            <textarea rows={3} value={pasted} onChange={this.handleChange}
+                      placeholder="https://music.yandex.ru/#access_token=..."/>
+            {error && <p className="err small">{error}</p>}
+            <button type="submit" className="cta primary" disabled={submitting || !pasted}>
+              {submitting ? 'Linking…' : 'Link Yandex.Music'}
+            </button>
+          </li>
+        </ol>
+      </form>
     );
   }
 }

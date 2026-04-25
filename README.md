@@ -2,15 +2,15 @@
 
 One-page React SPA that links a Yandex.Music account to the [`@berloganowbot`](https://t.me/berloganowbot) Telegram bot.
 
-Forked from [MarshalX/yandex-music-token](https://github.com/MarshalX/yandex-music-token). The integration pattern (backend URL with `hash` + `display_name` params) is inspired by [anna-oake/nowplaybot-yandex-auth](https://github.com/anna-oake/nowplaybot-yandex-auth).
-
 ## How it works
 
 1. The bot sends the user a link like `https://yandex.now.berloga.dev/?display_name=@user&hash=<state>`.
-2. The page reads `display_name` and `hash` from the query string and asks the user to sign in with their Yandex credentials.
-3. `POST` goes **straight from the browser to `https://oauth.yandex.com/token`** — the Yandex.Music OAuth endpoint, using the public client_id/secret of the official Yandex.Music client. The bot's server never sees the password.
-4. On success, the resulting `access_token` is `POST`ed (with the `hash`) to the bot's backend at `https://now.berloga.dev/yandex`, which looks up the Telegram user by `hash` and stores the token.
+2. The user clicks **Sign in with Yandex** — opens `oauth.yandex.ru/authorize` with the official Yandex.Music public `client_id`. They sign in with 2FA, password manager, whatever.
+3. After pressing **Allow**, Yandex redirects them to `https://music.yandex.ru/#access_token=...&token_type=bearer&...`. The user copies the URL (or just the token) and pastes it back into this page.
+4. The SPA `POST`s `{hash, token}` to the bot's backend at `https://now.berloga.dev/yandex`. The backend verifies the token against `yandex-music-api`, looks up the Telegram user by `hash`, and stores it.
 5. The page shows a "Return to Telegram" button.
+
+The user's password never touches our server — and never even touches this page.
 
 ## Local dev
 
@@ -39,5 +39,4 @@ Dokploy service setup:
 
 ## Credits
 
-- [MarshalX/yandex-music-token](https://github.com/MarshalX/yandex-music-token) — original React page and OAuth client credentials.
-- [anna-oake/nowplaybot-yandex-auth](https://github.com/anna-oake/nowplaybot-yandex-auth) — backend-POST integration pattern.
+The bot's backend talks to Yandex.Music via [`yandex-music-api`](https://github.com/MarshalX/yandex-music-api) by [@MarshalX](https://github.com/MarshalX) — the actual heavy lifting. This SPA exists only to translate the implicit OAuth token-flow into a tidy redirect for the bot.

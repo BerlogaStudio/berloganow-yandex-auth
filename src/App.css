@@ -1,19 +1,164 @@
+/* berloganow Yandex auth — matches the dark/blue style of now.berloga.dev */
+:root { color-scheme: light dark; }
+
+* { box-sizing: border-box; }
+
 body {
-    background-color: #ffff;
+  margin: 0;
+  font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #0f1115;
+  color: #e8e8ea;
+  min-height: 100vh;
+  padding: 40px 20px;
+  line-height: 1.55;
 }
 
-a:link {
-    text-decoration: none;
+.wrap { max-width: 680px; margin: 0 auto; }
+
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #1f2430;
+  color: #9ba2b0;
+  font-size: 12px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 14px;
 }
 
-a:visited {
-    text-decoration: none;
+h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -.02em; }
+.lede { color: #aaa; margin: 0 0 28px; font-size: 16px; }
+
+.card {
+  border: 1px solid #222;
+  border-radius: 12px;
+  background: #151820;
+  padding: 28px 22px;
+  margin: 0 0 18px;
+}
+.center { text-align: center; }
+.muted { color: #c6ccd8; }
+.small { font-size: 13.5px; }
+.ok { color: #4ade80; font-size: 18px; margin: 6px 0 18px; }
+.err { color: #ff6b6b; margin: 6px 0; }
+.badge { font-size: 56px; margin-bottom: 6px; }
+
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 28px; }
+ol.steps li {
+  counter-increment: s;
+  position: relative;
+  padding: 22px 22px 22px 66px;
+  border: 1px solid #222;
+  border-radius: 12px;
+  background: #151820;
+  margin-bottom: 14px;
+}
+ol.steps li::before {
+  content: counter(s);
+  position: absolute;
+  left: 20px;
+  top: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #3a76f0;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+}
+ol.steps li h3 { margin: 0 0 6px; font-size: 16px; }
+ol.steps li p { margin: 6px 0; color: #c6ccd8; font-size: 14.5px; }
+ol.steps li a { color: #78a9ff; }
+ol.steps li .note {
+  background: #1a1d25;
+  border-left: 3px solid #3a76f0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: #c6ccd8;
 }
 
-a:hover {
-    text-decoration: none;
+code {
+  background: #1f2430;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: SF Mono, Menlo, monospace;
+  font-size: 13px;
+}
+code.url {
+  display: block;
+  word-break: break-all;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
-a:active {
-    text-decoration: none;
+textarea {
+  display: block;
+  width: 100%;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  background: #0f1115;
+  color: #e8e8ea;
+  font-family: SF Mono, Menlo, monospace;
+  font-size: 13px;
+  resize: vertical;
+}
+textarea:focus { outline: none; border-color: #3a76f0; }
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: #d51007;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  border: 0;
+  cursor: pointer;
+}
+.cta:hover { background: #b00d05; color: #fff; }
+.cta.primary { background: #3a76f0; }
+.cta.primary:hover { background: #2e65d8; }
+.cta:disabled { background: #2a2f3a; color: #6b7280; cursor: not-allowed; }
+
+a { color: #78a9ff; }
+a:hover { text-decoration: underline; }
+
+footer {
+  margin-top: 32px;
+  color: #555;
+  font-size: 12.5px;
+  text-align: center;
+  line-height: 1.7;
+}
+footer a { color: #888; }
+
+@media (prefers-color-scheme: light) {
+  body { background: #f6f7f9; color: #1a1a1a; }
+  .lede { color: #444; }
+  .card,
+  ol.steps li { background: #fff; border-color: #e6e6ea; }
+  ol.steps li p,
+  .muted { color: #444; }
+  ol.steps li .note {
+    background: #eef4ff;
+    color: #1a4073;
+    border-left-color: #3a76f0;
+  }
+  .tag { background: #e8ecf2; color: #5a6474; }
+  code { background: #eef0f4; }
+  textarea { background: #fff; color: #1a1a1a; border-color: #d9dde6; }
+  footer { color: #999; }
+  footer a { color: #555; }
 }

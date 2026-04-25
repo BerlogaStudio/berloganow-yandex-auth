@@ -2,3 +2,8 @@
 .idea
 .DS_Store
 *.iml
+
+# build artifacts
+node_modules/
+build/
+.env.local
